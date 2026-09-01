@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS to hide scrollbars while allowing scroll snapping for TikTok feed */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* CSS for vertical feed scroll snap */
+.snap-y-container {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: 100vh;
+}
+.snap-y-item {
+  scroll-snap-align: start;
+  height: 100vh;
+}
+
+/* Custom cursive font styling */
+.font-cursive {
+  font-family: 'Dancing Script', cursive;
+}

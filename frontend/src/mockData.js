@@ -1,0 +1,94 @@
+const mockData = {
+  settings: {
+    storeName: "Velor Calzados",
+    primaryColor: "#ec4899",
+    whatsapp: "+5491123456789",
+    instagram: "https://instagram.com/bellamoda",
+    tiktok: "https://tiktok.com/@bellamoda"
+  },
+  products: [
+    {
+      id: "prod-1",
+      name: "Tacos Aguja Blue Dream",
+      description: "Elegantes zapatos de tacón aguja color azul eléctrico, perfectos para fiestas y eventos de gala. Material de gamuza sintética de alta calidad y plantilla acolchada para máxima comodidad.",
+      price: 89.99,
+      originalPrice: 115.00,
+      tag: "Oferta",
+      category: "Calzado",
+      images: [
+        "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&auto=format&fit=crop&q=60"
+      ],
+      sizes: ["35", "36", "37", "38", "39", "40"],
+      colors: ["Azul", "Negro", "Rojo"],
+      stock: 15
+    },
+    {
+      id: "prod-2",
+      name: "Zapatillas Urbanas Retro-Neon",
+      description: "Zapatillas deportivas con diseño urbano retro de los 90s. Colores vibrantes de neón, suela de goma duradera y tela transpirable. Ideales para el uso diario y un look moderno.",
+      price: 75.00,
+      tag: "Nuevo",
+      category: "Calzado",
+      images: [
+        "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500&auto=format&fit=crop&q=60"
+      ],
+      sizes: ["36", "37", "38", "39", "40"],
+      colors: ["Multicolor", "Blanco", "Negro"],
+      stock: 22
+    },
+    {
+      id: "prod-3",
+      name: "Vestido Escarlata de Noche",
+      description: "Vestido largo de noche en color rojo escarlata con escote elegante y caída fluida. Fabricado en seda satinada, ideal para ocasiones especiales de noche.",
+      price: 120.00,
+      originalPrice: 149.99,
+      tag: "Oferta",
+      category: "Prendas",
+      images: [
+        "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=500&auto=format&fit=crop&q=60"
+      ],
+      sizes: ["S", "M", "L", "XL"],
+      colors: ["Rojo", "Negro"],
+      stock: 8
+    },
+    {
+      id: "prod-4",
+      name: "Conjunto Casual Amarillo Sol",
+      description: "Conjunto casual de dos piezas compuesto por sudadera ligera y pantalón deportivo en color amarillo pastel. Cómodo, fresco y super trendy.",
+      price: 65.50,
+      tag: "Nuevo",
+      category: "Prendas",
+      images: [
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&auto=format&fit=crop&q=60"
+      ],
+      sizes: ["XS", "S", "M", "L"],
+      colors: ["Amarillo", "Verde Pastel", "Lila"],
+      stock: 18
+    }
+  ],
+  videos: [
+    {
+      id: "vid-1",
+      videoUrl: "https://www.tiktok.com/@bellapoarch/video/6862153058223197445",
+      productId: "prod-1",
+      caption: "Pasarela de otoño con los increíbles Tacos Blue Dream ✨👠 ¡Consigue los tuyos hoy!",
+      likes: 1250
+    },
+    {
+      id: "vid-2",
+      videoUrl: "https://www.instagram.com/reel/C8q43_BxfX3/",
+      productId: "prod-2",
+      caption: "Look urbano con las nuevas Retro-Neon. Comodidad y estilo sin límites 💥👟",
+      likes: 980
+    },
+    {
+      id: "vid-3",
+      videoUrl: "https://www.tiktok.com/@khaby.lame/video/6979603381669252358",
+      productId: "prod-3",
+      caption: "Elegancia pura y simple. Roba todas las miradas con el nuevo vestido de seda escarlata 💃🍷",
+      likes: 2100
+    }
+  ]
+};
+
+export default mockData;

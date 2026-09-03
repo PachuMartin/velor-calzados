@@ -8,11 +8,11 @@ import Login from './components/Login';
 import AdminPanel from './components/AdminPanel';
 import HomeView from './components/HomeView';
 
-const API_BASE = 'https://velor-backend.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://velor-backend.onrender.com/api';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'feed' (TikTok), 'grid' (Instagram)
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [products, setProducts] = useState([]);
   const [videos, setVideos] = useState([]);
   const [settings, setSettings] = useState({

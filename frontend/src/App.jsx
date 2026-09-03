@@ -375,6 +375,7 @@ export default function App() {
         onRemove={removeFromCart}
         onUpdateQty={updateCartQuantity}
         settings={settings}
+        apiBase={API_BASE}
         isDarkMode={isDarkMode}
       />
 

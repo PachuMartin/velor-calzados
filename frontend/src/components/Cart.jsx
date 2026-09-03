@@ -1,9 +1,10 @@
 import React from 'react';
 import { X, Trash2, ShoppingBag, Send } from 'lucide-react';
 
-export default function Cart({ isOpen, onClose, cartItems, onRemove, onUpdateQty, settings, isDarkMode }) {
+export default function Cart({ isOpen, onClose, cartItems, onRemove, onUpdateQty, settings, apiBase, isDarkMode }) {
   if (!isOpen) return null;
 
+  const serverBase = apiBase ? apiBase.replace('/api', '') : '';
   const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   // Generate WhatsApp text and open link
@@ -63,7 +64,7 @@ export default function Cart({ isOpen, onClose, cartItems, onRemove, onUpdateQty
             {cartItems.length > 0 ? (
               cartItems.map((item, index) => {
                 const imgUrl = item.product.images && item.product.images[0]
-                  ? (item.product.images[0].startsWith('http') ? item.product.images[0] : `http://localhost:5000${item.product.images[0]}`)
+                  ? (item.product.images[0].startsWith('http') ? item.product.images[0] : `${serverBase}${item.product.images[0]}`)
                   : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500';
 
                 return (

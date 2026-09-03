@@ -84,6 +84,19 @@ function authenticateToken(req, res, next) {
 
 // --- API ENDPOINTS ---
 
+// Root Healthcheck Endpoints
+app.get(['/', '/api'], (req, res) => {
+  res.json({
+    status: 'online',
+    message: 'Servidor API de Velor Calzados activo y funcionando correctamente 🚀',
+    endpoints: [
+      '/api/products',
+      '/api/settings',
+      '/api/videos'
+    ]
+  });
+});
+
 // Admin Authentication
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;

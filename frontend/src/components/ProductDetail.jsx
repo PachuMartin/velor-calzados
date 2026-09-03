@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShoppingCart, Check } from 'lucide-react';
+import { X, ShoppingCart, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function ProductDetail({ product, onClose, onAddToCart, apiBase, isDarkMode }) {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] || '');
@@ -7,9 +7,24 @@ export default function ProductDetail({ product, onClose, onAddToCart, apiBase, 
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const productImageUrl = product.images && product.images[activeImageIndex]
-    ? (product.images[activeImageIndex].startsWith('http') ? product.images[activeImageIndex] : `${apiBase.replace('/api', '')}${product.images[activeImageIndex]}`)
-    : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500';
+  const imagesList = product.images && product.images.length > 0
+    ? product.images
+    : ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500'];
+
+  const currentImg = imagesList[activeImageIndex] || imagesList[0];
+  const productImageUrl = currentImg.startsWith('http')
+    ? currentImg
+    : `${apiBase.replace('/api', '')}${currentImg}`;
+
+  const nextImage = (e) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev + 1) % imagesList.length);
+  };
+
+  const prevImage = (e) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev - 1 + imagesList.length) % imagesList.length);
+  };
 
   const handleAddToCart = () => {
     if (!selectedSize && product.sizes.length > 0) {
@@ -35,7 +50,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, apiBase, 
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className={`absolute top-4 right-4 z-10 p-2 rounded-full border active:scale-95 transition-all ${
+          className={`absolute top-4 right-4 z-20 p-2 rounded-full border active:scale-95 transition-all ${
             isDarkMode 
               ? 'bg-black/60 hover:bg-black/80 text-gray-300 hover:text-white border-white/5' 
               : 'bg-white/80 hover:bg-white text-zinc-600 hover:text-zinc-900 border-zinc-200 shadow-sm'
@@ -46,13 +61,41 @@ export default function ProductDetail({ product, onClose, onAddToCart, apiBase, 
 
         {/* Modal Scrollable Content */}
         <div className="overflow-y-auto no-scrollbar flex-1">
-          {/* Main Product Image */}
-          <div className="aspect-square relative w-full bg-zinc-950">
+          {/* Main Product Image with Gallery Carousel Controls */}
+          <div className="aspect-square relative w-full bg-zinc-950 group select-none">
             <img 
               src={productImageUrl} 
               alt={product.name} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-all duration-300"
             />
+
+            {/* Photo Counter Badge */}
+            {imagesList.length > 1 && (
+              <div className="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-full border border-white/10">
+                {activeImageIndex + 1} / {imagesList.length}
+              </div>
+            )}
+
+            {/* Left / Right Carousel Navigation Arrows */}
+            {imagesList.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/10 active:scale-90 transition-all opacity-80 hover:opacity-100 shadow-lg"
+                  title="Foto anterior"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/10 active:scale-90 transition-all opacity-80 hover:opacity-100 shadow-lg"
+                  title="Foto siguiente"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            )}
+
             {product.stock === 0 && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                 <span className="bg-zinc-800 text-zinc-400 font-extrabold uppercase px-6 py-3 rounded-xl tracking-wider text-sm border border-zinc-700">

@@ -134,19 +134,27 @@ app.get('/api/products', async (req, res) => {
   res.json(db.products);
 });
 
-// Create new product (supports image uploads)
-app.post('/api/products', authenticateToken, upload.array('images', 5), async (req, res) => {
+// Create new product (supports multiple image uploads & URLs)
+app.post('/api/products', authenticateToken, upload.array('images', 15), async (req, res) => {
   try {
     const db = await readDB();
     const { name, description, price, originalPrice, tag, category, sizes, colors, stock } = req.body;
 
-    // Get uploaded files paths
     let imageUrls = [];
+
+    // Add multiple uploaded file paths
     if (req.files && req.files.length > 0) {
-      imageUrls = req.files.map(file => `/uploads/${file.filename}`);
-    } else if (req.body.imageUrlList) {
-      // Fallback if image URLs were sent as text list
-      imageUrls = JSON.parse(req.body.imageUrlList);
+      imageUrls.push(...req.files.map(file => `/uploads/${file.filename}`));
+    }
+
+    // Add multiple URLs from list
+    if (req.body.imageUrlList) {
+      try {
+        const parsed = JSON.parse(req.body.imageUrlList);
+        if (Array.isArray(parsed)) {
+          imageUrls.push(...parsed.filter(u => u && typeof u === 'string' && u.trim().length > 0));
+        }
+      } catch (e) {}
     }
 
     const newProduct = {
@@ -171,8 +179,8 @@ app.post('/api/products', authenticateToken, upload.array('images', 5), async (r
   }
 });
 
-// Update product
-app.put('/api/products/:id', authenticateToken, upload.array('images', 5), async (req, res) => {
+// Update product (supports adding and removing multiple images)
+app.put('/api/products/:id', authenticateToken, upload.array('images', 15), async (req, res) => {
   try {
     const db = await readDB();
     const productIndex = db.products.findIndex(p => p.id === req.params.id);
@@ -184,12 +192,31 @@ app.put('/api/products/:id', authenticateToken, upload.array('images', 5), async
     const existingProduct = db.products[productIndex];
     const { name, description, price, originalPrice, tag, category, sizes, colors, stock } = req.body;
 
-    let imageUrls = [...existingProduct.images];
-    // If new files uploaded, replace or add to images
+    let imageUrls = [];
+
+    // Retain existing images if provided
+    if (req.body.existingImages) {
+      try {
+        const parsed = JSON.parse(req.body.existingImages);
+        if (Array.isArray(parsed)) imageUrls.push(...parsed);
+      } catch (e) {}
+    } else if (!req.files || req.files.length === 0) {
+      imageUrls = [...existingProduct.images];
+    }
+
+    // Append newly uploaded files
     if (req.files && req.files.length > 0) {
-      imageUrls = req.files.map(file => `/uploads/${file.filename}`);
-    } else if (req.body.imageUrlList) {
-      imageUrls = JSON.parse(req.body.imageUrlList);
+      imageUrls.push(...req.files.map(file => `/uploads/${file.filename}`));
+    }
+
+    // Append newly provided image URLs
+    if (req.body.imageUrlList) {
+      try {
+        const parsed = JSON.parse(req.body.imageUrlList);
+        if (Array.isArray(parsed)) {
+          imageUrls.push(...parsed.filter(u => u && typeof u === 'string' && u.trim().length > 0));
+        }
+      } catch (e) {}
     }
 
     const updatedProduct = {
@@ -200,7 +227,7 @@ app.put('/api/products/:id', authenticateToken, upload.array('images', 5), async
       originalPrice: originalPrice !== undefined ? (originalPrice ? parseFloat(originalPrice) : null) : existingProduct.originalPrice,
       tag: tag !== undefined ? (tag || null) : existingProduct.tag,
       category: category || existingProduct.category,
-      images: imageUrls,
+      images: imageUrls.length > 0 ? imageUrls : ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500'],
       sizes: typeof sizes === 'string' ? JSON.parse(sizes) : (sizes || existingProduct.sizes),
       colors: typeof colors === 'string' ? JSON.parse(colors) : (colors || existingProduct.colors),
       stock: stock !== undefined ? parseInt(stock) : existingProduct.stock

@@ -18,6 +18,7 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
     sizes: '36, 37, 38, 39',
     colors: 'Negro, Blanco',
     stock: '10',
+    existingImages: [],
     images: null,
     imageUrlInput: ''
   });
@@ -94,8 +95,9 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
       sizes: prod.sizes.join(', '),
       colors: prod.colors.join(', '),
       stock: prod.stock.toString(),
+      existingImages: prod.images || [],
       images: null,
-      imageUrlInput: prod.images && prod.images[0] && prod.images[0].startsWith('http') ? prod.images[0] : ''
+      imageUrlInput: ''
     });
     setShowProductForm(true);
   };
@@ -151,13 +153,22 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
       formData.append('sizes', JSON.stringify(sizesArr));
       formData.append('colors', JSON.stringify(colorsArr));
       formData.append('stock', productForm.stock);
+      formData.append('existingImages', JSON.stringify(productForm.existingImages || []));
 
       if (productForm.images && productForm.images.length > 0) {
         for (let i = 0; i < productForm.images.length; i++) {
           formData.append('images', productForm.images[i]);
         }
-      } else if (productForm.imageUrlInput) {
-        formData.append('imageUrlList', JSON.stringify([productForm.imageUrlInput]));
+      }
+
+      if (productForm.imageUrlInput) {
+        const urlArray = productForm.imageUrlInput
+          .split(/[\n,]+/)
+          .map(u => u.trim())
+          .filter(u => u.length > 0);
+        if (urlArray.length > 0) {
+          formData.append('imageUrlList', JSON.stringify(urlArray));
+        }
       }
 
       const url = productForm.id 
@@ -177,7 +188,7 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
         setShowProductForm(false);
         setProductForm({
           id: null, name: '', description: '', price: '', originalPrice: '', tag: '', category: 'Calzado',
-          sizes: '36, 37, 38, 39', colors: 'Negro, Blanco', stock: '10', images: null, imageUrlInput: ''
+          sizes: '36, 37, 38, 39', colors: 'Negro, Blanco', stock: '10', existingImages: [], images: null, imageUrlInput: ''
         });
         onUpdate();
       } else {
@@ -560,31 +571,84 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
                     </div>
                   </div>
 
-                  <div className="border-t border-zinc-800/80 pt-4">
-                    <label className={`block text-[10px] uppercase font-bold mb-1 pl-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Imágenes del Producto</label>
-                    
-                    {/* File Upload Selector */}
-                    <input
-                      type="file" multiple accept="image/*"
-                      onChange={e => setProductForm({...productForm, images: e.target.files})}
-                      className={`w-full border rounded-xl p-3 focus:outline-none ${
-                        isDarkMode 
-                          ? 'bg-zinc-950 border-zinc-800 text-zinc-400 file:bg-zinc-850 file:text-zinc-200' 
-                          : 'bg-white border-zinc-300 text-zinc-500 file:bg-zinc-100 file:text-zinc-700'
-                      }`}
-                    />
+                  <div className={`border-t pt-4 ${isDarkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className={`block text-[10px] uppercase font-bold pl-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                        Fotografías del Producto (Múltiples fotos permitidas)
+                      </label>
+                      <span className="text-[10px] text-pink-500 font-bold bg-pink-500/10 px-2 py-0.5 rounded-full">
+                        {(productForm.existingImages?.length || 0) + (productForm.images?.length || 0)} fotos en total
+                      </span>
+                    </div>
 
-                    <p className="text-[10px] text-zinc-500 my-2 text-center">O ingresa una URL de imagen directa de respaldo:</p>
-                    
-                    {/* URL Input */}
-                    <input
-                      type="url" value={productForm.imageUrlInput}
-                      onChange={e => setProductForm({...productForm, imageUrlInput: e.target.value})}
-                      className={`w-full border rounded-xl p-3 focus:outline-none focus:border-pink-500 font-mono ${
-                        isDarkMode ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-white border-zinc-300 text-zinc-900'
-                      }`}
-                      placeholder="https://images.unsplash.com/photo-..."
-                    />
+                    {/* Existing photos preview grid with delete button */}
+                    {productForm.existingImages && productForm.existingImages.length > 0 && (
+                      <div className="mb-4">
+                        <span className={`text-[10px] block mb-1.5 font-semibold ${isDarkMode ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                          Fotos actuales del producto (haz clic en 🗑️ para eliminar una foto):
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {productForm.existingImages.map((imgUrl, idx) => {
+                            const fullUrl = imgUrl.startsWith('http') ? imgUrl : `${apiBase.replace('/api', '')}${imgUrl}`;
+                            return (
+                              <div key={idx} className="relative group w-16 h-16 rounded-xl overflow-hidden border border-zinc-700 bg-black shadow-sm">
+                                <img src={fullUrl} alt="" className="w-full h-full object-cover" />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setProductForm({
+                                      ...productForm,
+                                      existingImages: productForm.existingImages.filter((_, i) => i !== idx)
+                                    });
+                                  }}
+                                  className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center text-rose-400 hover:text-rose-200 transition-opacity"
+                                  title="Quitar esta foto"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Subir archivos locales (PC / Celular) */}
+                    <div>
+                      <span className={`text-[10px] block mb-1 font-semibold ${isDarkMode ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                        📁 Subir archivos desde tu dispositivo (puedes seleccionar varias fotos a la vez):
+                      </span>
+                      <input
+                        type="file" multiple accept="image/*"
+                        onChange={e => setProductForm({...productForm, images: e.target.files})}
+                        className={`w-full border rounded-xl p-3 focus:outline-none ${
+                          isDarkMode 
+                            ? 'bg-zinc-950 border-zinc-800 text-zinc-400 file:bg-zinc-850 file:text-zinc-200' 
+                            : 'bg-white border-zinc-300 text-zinc-500 file:bg-zinc-100 file:text-zinc-700'
+                        }`}
+                      />
+                      {productForm.images && productForm.images.length > 0 && (
+                        <p className="text-[10px] text-emerald-400 mt-1.5 font-bold pl-1 flex items-center gap-1">
+                          ✓ {productForm.images.length} archivo(s) nuevo(s) seleccionado(s) listos para subir.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Ingresar múltiples URLs */}
+                    <div className="mt-4">
+                      <span className={`text-[10px] block mb-1 font-semibold ${isDarkMode ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                        🌐 O pega enlaces web directos de fotos (puedes ingresar varias URLs, una por línea):
+                      </span>
+                      <textarea
+                        rows="3"
+                        value={productForm.imageUrlInput}
+                        onChange={e => setProductForm({...productForm, imageUrlInput: e.target.value})}
+                        className={`w-full border rounded-xl p-3 focus:outline-none focus:border-pink-500 font-mono text-xs resize-none ${
+                          isDarkMode ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-white border-zinc-300 text-zinc-900'
+                        }`}
+                        placeholder={"https://ejemplo.com/foto1.jpg\nhttps://ejemplo.com/foto2.jpg\nhttps://ejemplo.com/foto3.jpg"}
+                      />
+                    </div>
                   </div>
 
                   {/* Actions buttons */}

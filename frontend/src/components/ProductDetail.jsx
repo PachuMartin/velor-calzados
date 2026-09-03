@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, ShoppingCart, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatImageUrl, FALLBACK_IMAGE } from '../utils/imageHelper';
 
 export default function ProductDetail({ product, onClose, onAddToCart, apiBase, isDarkMode }) {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] || '');
@@ -9,12 +10,10 @@ export default function ProductDetail({ product, onClose, onAddToCart, apiBase, 
 
   const imagesList = product.images && product.images.length > 0
     ? product.images
-    : ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500'];
+    : [FALLBACK_IMAGE];
 
-  const currentImg = imagesList[activeImageIndex] || imagesList[0];
-  const productImageUrl = currentImg.startsWith('http')
-    ? currentImg
-    : `${apiBase.replace('/api', '')}${currentImg}`;
+  const currentRawImg = imagesList[activeImageIndex] || imagesList[0];
+  const productImageUrl = formatImageUrl(currentRawImg, apiBase);
 
   const nextImage = (e) => {
     e.stopPropagation();
@@ -66,6 +65,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, apiBase, 
             <img 
               src={productImageUrl} 
               alt={product.name} 
+              onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
               className="w-full h-full object-cover transition-all duration-300"
             />
 
@@ -109,7 +109,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, apiBase, 
           {product.images && product.images.length > 1 && (
             <div className={`flex gap-2 p-3 overflow-x-auto ${isDarkMode ? 'bg-zinc-950' : 'bg-zinc-100'}`}>
               {product.images.map((img, index) => {
-                const thumbUrl = img.startsWith('http') ? img : `${apiBase.replace('/api', '')}${img}`;
+                const thumbUrl = formatImageUrl(img, apiBase);
                 return (
                   <button
                     key={index}
@@ -118,7 +118,12 @@ export default function ProductDetail({ product, onClose, onAddToCart, apiBase, 
                       activeImageIndex === index ? 'border-pink-500 scale-95' : 'border-zinc-800 opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
+                    <img 
+                      src={thumbUrl} 
+                      alt="" 
+                      onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
+                      className="w-full h-full object-cover" 
+                    />
                   </button>
                 );
               })}

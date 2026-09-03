@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Share2, Volume2, VolumeX, ShoppingCart, Play, Pause, ExternalLink, RefreshCw } from 'lucide-react';
+import { formatImageUrl, FALLBACK_IMAGE } from '../utils/imageHelper';
 
 // Helper to parse TikTok and Instagram URLs
 function parseEmbedData(url) {
@@ -164,9 +165,8 @@ function VideoCard({ video, isActive, product, onOpenProduct, apiBase }) {
     }
   };
 
-  const productImageUrl = product && product.images && product.images[0]
-    ? (product.images[0].startsWith('http') ? product.images[0] : `${apiBase.replace('/api', '')}${product.images[0]}`)
-    : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500';
+  const rawImg = product && product.images && product.images[0] ? product.images[0] : null;
+  const productImageUrl = formatImageUrl(rawImg, apiBase);
 
   return (
     <div 
@@ -284,6 +284,7 @@ function VideoCard({ video, isActive, product, onOpenProduct, apiBase }) {
               <img 
                 src={productImageUrl} 
                 alt={product.name} 
+                onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                 className="w-full h-full object-cover rounded-full"
               />
             </div>
@@ -313,6 +314,7 @@ function VideoCard({ video, isActive, product, onOpenProduct, apiBase }) {
                 <img 
                   src={productImageUrl} 
                   alt={product.name} 
+                  onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                   className="w-12 h-12 object-cover rounded-xl border border-zinc-800"
                 />
                 <div>

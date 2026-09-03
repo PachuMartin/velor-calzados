@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Settings, ShoppingBag, Film, Plus, Trash2, Edit, Save, AlertCircle, FileText, CheckCircle } from 'lucide-react';
+import { Settings, ShoppingBag, Film, Plus, Trash2, Edit, Save, AlertCircle, FileText, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { formatImageUrl, FALLBACK_IMAGE } from '../utils/imageHelper';
 
 export default function AdminPanel({ products, videos, settings, token, onUpdate, apiBase, isDemo, isDarkMode }) {
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'videos', 'settings'
@@ -589,10 +590,15 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
                         </span>
                         <div className="flex flex-wrap gap-2">
                           {productForm.existingImages.map((imgUrl, idx) => {
-                            const fullUrl = imgUrl.startsWith('http') ? imgUrl : `${apiBase.replace('/api', '')}${imgUrl}`;
+                            const fullUrl = formatImageUrl(imgUrl, apiBase);
                             return (
                               <div key={idx} className="relative group w-16 h-16 rounded-xl overflow-hidden border border-zinc-700 bg-black shadow-sm">
-                                <img src={fullUrl} alt="" className="w-full h-full object-cover" />
+                                <img 
+                                  src={fullUrl} 
+                                  alt="" 
+                                  onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
+                                  className="w-full h-full object-cover" 
+                                />
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -634,7 +640,7 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
                       )}
                     </div>
 
-                    {/* Ingresar múltiples URLs */}
+                    {/* Ingresar múltiples URLs con Vista Previa en Vivo */}
                     <div className="mt-4">
                       <span className={`text-[10px] block mb-1 font-semibold ${isDarkMode ? 'text-zinc-300' : 'text-zinc-600'}`}>
                         🌐 O pega enlaces web directos de fotos (puedes ingresar varias URLs, una por línea):
@@ -646,8 +652,39 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
                         className={`w-full border rounded-xl p-3 focus:outline-none focus:border-pink-500 font-mono text-xs resize-none ${
                           isDarkMode ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-white border-zinc-300 text-zinc-900'
                         }`}
-                        placeholder={"https://ejemplo.com/foto1.jpg\nhttps://ejemplo.com/foto2.jpg\nhttps://ejemplo.com/foto3.jpg"}
+                        placeholder={"https://i.ibb.co/abc/foto1.jpg\nhttps://images.unsplash.com/photo-...\nhttps://res.cloudinary.com/..."}
                       />
+
+                      {/* Live preview of entered links */}
+                      {productForm.imageUrlInput && productForm.imageUrlInput.trim().length > 0 && (
+                        <div className="mt-2.5 p-3 rounded-xl bg-black/40 border border-zinc-800">
+                          <span className="text-[10px] font-bold text-zinc-400 block mb-1.5">
+                            Vista previa de los enlaces ingresados:
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {productForm.imageUrlInput
+                              .split(/[\n,]+/)
+                              .map(u => u.trim())
+                              .filter(u => u.length > 0)
+                              .map((u, i) => (
+                                <div key={i} className="relative w-14 h-14 rounded-lg overflow-hidden border border-zinc-700 bg-zinc-900 flex items-center justify-center">
+                                  <img 
+                                    src={formatImageUrl(u, apiBase)} 
+                                    alt="Preview" 
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                                    }}
+                                    className="w-full h-full object-cover" 
+                                  />
+                                  <div className="hidden absolute inset-0 bg-rose-950/80 text-[8px] text-rose-300 font-bold p-1 text-center items-center justify-center">
+                                    Link Inválido
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 

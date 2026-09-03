@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Eye } from 'lucide-react';
+import { formatImageUrl, FALLBACK_IMAGE } from '../utils/imageHelper';
 
 export default function ProductGrid({ products, onOpenProduct, apiBase, isDarkMode }) {
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -42,9 +43,8 @@ export default function ProductGrid({ products, onOpenProduct, apiBase, isDarkMo
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
           {filteredProducts.map(product => {
-            const productImageUrl = product.images && product.images[0]
-              ? (product.images[0].startsWith('http') ? product.images[0] : `${apiBase.replace('/api', '')}${product.images[0]}`)
-              : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500';
+            const rawImg = product.images && product.images[0] ? product.images[0] : null;
+            const productImageUrl = formatImageUrl(rawImg, apiBase);
 
             const isHovered = hoveredProduct === product.id;
 
@@ -65,6 +65,7 @@ export default function ProductGrid({ products, onOpenProduct, apiBase, isDarkMo
                   <img
                     src={productImageUrl}
                     alt={product.name}
+                    onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />

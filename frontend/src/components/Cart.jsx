@@ -1,10 +1,10 @@
 import React from 'react';
 import { X, Trash2, ShoppingBag, Send } from 'lucide-react';
+import { formatImageUrl, FALLBACK_IMAGE } from '../utils/imageHelper';
 
 export default function Cart({ isOpen, onClose, cartItems, onRemove, onUpdateQty, settings, apiBase, isDarkMode }) {
   if (!isOpen) return null;
 
-  const serverBase = apiBase ? apiBase.replace('/api', '') : '';
   const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   // Generate WhatsApp text and open link
@@ -63,9 +63,8 @@ export default function Cart({ isOpen, onClose, cartItems, onRemove, onUpdateQty
           <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
             {cartItems.length > 0 ? (
               cartItems.map((item, index) => {
-                const imgUrl = item.product.images && item.product.images[0]
-                  ? (item.product.images[0].startsWith('http') ? item.product.images[0] : `${serverBase}${item.product.images[0]}`)
-                  : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500';
+                const rawImg = item.product.images && item.product.images[0] ? item.product.images[0] : null;
+                const imgUrl = formatImageUrl(rawImg, apiBase);
 
                 return (
                   <div 
@@ -80,6 +79,7 @@ export default function Cart({ isOpen, onClose, cartItems, onRemove, onUpdateQty
                     <img 
                       src={imgUrl} 
                       alt={item.product.name} 
+                      onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                       className={`w-20 h-20 object-cover rounded-xl border ${
                         isDarkMode ? 'border-zinc-800' : 'border-zinc-200'
                       }`}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShoppingBag, Tag, Sparkles, ArrowRight } from 'lucide-react';
+import { formatImageUrl, FALLBACK_IMAGE } from '../utils/imageHelper';
 
 export default function HomeView({ products, onOpenProduct, apiBase, setActiveTab, isDarkMode }) {
   const offers = products.filter(p => p.originalPrice && p.originalPrice > p.price);
@@ -67,10 +68,8 @@ export default function HomeView({ products, onOpenProduct, apiBase, setActiveTa
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {offers.map(product => {
-              const productImageUrl = product.images && product.images[0]
-                ? (product.images[0].startsWith('http') ? product.images[0] : `${apiBase.replace('/api', '')}${product.images[0]}`)
-                : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500';
-
+              const rawImg = product.images && product.images[0] ? product.images[0] : null;
+              const productImageUrl = formatImageUrl(rawImg, apiBase);
               const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
               return (
@@ -87,6 +86,7 @@ export default function HomeView({ products, onOpenProduct, apiBase, setActiveTa
                     <img 
                       src={productImageUrl} 
                       alt={product.name} 
+                      onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <span className="absolute top-2 left-2 bg-rose-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-lg border border-rose-400/20">
@@ -147,9 +147,8 @@ export default function HomeView({ products, onOpenProduct, apiBase, setActiveTa
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {newProducts.map(product => {
-            const productImageUrl = product.images && product.images[0]
-              ? (product.images[0].startsWith('http') ? product.images[0] : `${apiBase.replace('/api', '')}${product.images[0]}`)
-              : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500';
+            const rawImg = product.images && product.images[0] ? product.images[0] : null;
+            const productImageUrl = formatImageUrl(rawImg, apiBase);
 
             return (
               <div 
@@ -165,6 +164,7 @@ export default function HomeView({ products, onOpenProduct, apiBase, setActiveTa
                   <img 
                     src={productImageUrl} 
                     alt={product.name} 
+                    onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <span className="absolute top-2 left-2 bg-pink-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-lg border border-pink-400/20">

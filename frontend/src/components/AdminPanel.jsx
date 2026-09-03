@@ -12,6 +12,8 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
     name: '',
     description: '',
     price: '',
+    originalPrice: '',
+    tag: '',
     category: 'Calzado',
     sizes: '36, 37, 38, 39',
     colors: 'Negro, Blanco',
@@ -66,7 +68,11 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
         triggerMessage("Configuración de la tienda guardada correctamente");
         onUpdate();
       } else {
-        triggerMessage("Error al guardar la configuración", "error");
+        if (res.status === 401 || res.status === 403) {
+          triggerMessage("Sesión expirada. Por favor, cierra sesión e ingresa nuevamente.", "error");
+        } else {
+          triggerMessage("Error al guardar la configuración", "error");
+        }
       }
     } catch (err) {
       triggerMessage("Error al conectar con el servidor", "error");
@@ -82,6 +88,8 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
       name: prod.name,
       description: prod.description,
       price: prod.price.toString(),
+      originalPrice: prod.originalPrice ? prod.originalPrice.toString() : '',
+      tag: prod.tag || '',
       category: prod.category,
       sizes: prod.sizes.join(', '),
       colors: prod.colors.join(', '),
@@ -137,6 +145,8 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
       formData.append('name', productForm.name);
       formData.append('description', productForm.description);
       formData.append('price', productForm.price);
+      formData.append('originalPrice', productForm.originalPrice || '');
+      formData.append('tag', productForm.tag || '');
       formData.append('category', productForm.category);
       formData.append('sizes', JSON.stringify(sizesArr));
       formData.append('colors', JSON.stringify(colorsArr));
@@ -166,13 +176,17 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
         triggerMessage(productForm.id ? "Producto actualizado correctamente" : "Producto creado correctamente");
         setShowProductForm(false);
         setProductForm({
-          id: null, name: '', description: '', price: '', category: 'Calzado',
+          id: null, name: '', description: '', price: '', originalPrice: '', tag: '', category: 'Calzado',
           sizes: '36, 37, 38, 39', colors: 'Negro, Blanco', stock: '10', images: null, imageUrlInput: ''
         });
         onUpdate();
       } else {
-        const errorData = await res.json();
-        triggerMessage(errorData.error || "Error al guardar el producto", "error");
+        if (res.status === 401 || res.status === 403) {
+          triggerMessage("Sesión de administrador no válida o expirada. Por favor, cierra sesión e ingresa con la contraseña para renovar el token.", "error");
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          triggerMessage(errorData.error || `Error (${res.status}) al guardar el producto`, "error");
+        }
       }
     } catch (err) {
       triggerMessage("Error de servidor al guardar el producto", "error");
@@ -469,7 +483,7 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className={`block text-[10px] uppercase font-bold mb-1 pl-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Precio ($)</label>
+                      <label className={`block text-[10px] uppercase font-bold mb-1 pl-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Precio de Venta ($)</label>
                       <input
                         type="number" step="0.01" required value={productForm.price}
                         onChange={e => setProductForm({...productForm, price: e.target.value})}
@@ -480,7 +494,36 @@ export default function AdminPanel({ products, videos, settings, token, onUpdate
                       />
                     </div>
                     <div>
-                      <label className={`block text-[10px] uppercase font-bold mb-1 pl-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Stock de Stock</label>
+                      <label className={`block text-[10px] uppercase font-bold mb-1 pl-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Precio Original / Anterior ($) (Opcional)</label>
+                      <input
+                        type="number" step="0.01" value={productForm.originalPrice}
+                        onChange={e => setProductForm({...productForm, originalPrice: e.target.value})}
+                        className={`w-full border rounded-xl p-3 focus:outline-none focus:border-pink-500 font-mono ${
+                          isDarkMode ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-white border-zinc-300 text-zinc-900'
+                        }`}
+                        placeholder="ej: 99.99 (Para mostrar oferta)"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-[10px] uppercase font-bold mb-1 pl-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Etiqueta Especial (Opcional)</label>
+                      <select
+                        value={productForm.tag}
+                        onChange={e => setProductForm({...productForm, tag: e.target.value})}
+                        className={`w-full border rounded-xl p-3 focus:outline-none focus:border-pink-500 ${
+                          isDarkMode ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-white border-zinc-300 text-zinc-900'
+                        }`}
+                      >
+                        <option value="">Ninguna</option>
+                        <option value="Nuevo">Nuevo</option>
+                        <option value="Oferta">Oferta</option>
+                        <option value="Popular">Popular</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`block text-[10px] uppercase font-bold mb-1 pl-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Stock Disponible</label>
                       <input
                         type="number" required value={productForm.stock}
                         onChange={e => setProductForm({...productForm, stock: e.target.value})}

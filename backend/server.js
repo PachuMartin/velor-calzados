@@ -138,7 +138,7 @@ app.get('/api/products', async (req, res) => {
 app.post('/api/products', authenticateToken, upload.array('images', 5), async (req, res) => {
   try {
     const db = await readDB();
-    const { name, description, price, category, sizes, colors, stock } = req.body;
+    const { name, description, price, originalPrice, tag, category, sizes, colors, stock } = req.body;
 
     // Get uploaded files paths
     let imageUrls = [];
@@ -154,7 +154,9 @@ app.post('/api/products', authenticateToken, upload.array('images', 5), async (r
       name,
       description,
       price: parseFloat(price),
-      category,
+      originalPrice: originalPrice ? parseFloat(originalPrice) : null,
+      tag: tag || null,
+      category: category || 'Calzado',
       images: imageUrls.length > 0 ? imageUrls : ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500'],
       sizes: typeof sizes === 'string' ? JSON.parse(sizes) : (sizes || []),
       colors: typeof colors === 'string' ? JSON.parse(colors) : (colors || []),
@@ -180,7 +182,7 @@ app.put('/api/products/:id', authenticateToken, upload.array('images', 5), async
     }
 
     const existingProduct = db.products[productIndex];
-    const { name, description, price, category, sizes, colors, stock } = req.body;
+    const { name, description, price, originalPrice, tag, category, sizes, colors, stock } = req.body;
 
     let imageUrls = [...existingProduct.images];
     // If new files uploaded, replace or add to images
@@ -195,6 +197,8 @@ app.put('/api/products/:id', authenticateToken, upload.array('images', 5), async
       name: name || existingProduct.name,
       description: description || existingProduct.description,
       price: price ? parseFloat(price) : existingProduct.price,
+      originalPrice: originalPrice !== undefined ? (originalPrice ? parseFloat(originalPrice) : null) : existingProduct.originalPrice,
+      tag: tag !== undefined ? (tag || null) : existingProduct.tag,
       category: category || existingProduct.category,
       images: imageUrls,
       sizes: typeof sizes === 'string' ? JSON.parse(sizes) : (sizes || existingProduct.sizes),

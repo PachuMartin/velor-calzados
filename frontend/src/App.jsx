@@ -13,15 +13,26 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'https://velor-backend.onrende
 export default function App() {
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'feed' (TikTok), 'grid' (Instagram)
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [settings, setSettings] = useState({
+  
+  // Instant Cache Helper
+  const getInitialCache = (key, fallback) => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  };
+
+  const [products, setProducts] = useState(() => getInitialCache('velor_cached_products', []));
+  const [videos, setVideos] = useState(() => getInitialCache('velor_cached_videos', []));
+  const [settings, setSettings] = useState(() => getInitialCache('velor_cached_settings', {
     storeName: "Velor Calzados",
     primaryColor: "#ec4899",
     whatsapp: "+5491123456789",
     instagram: "https://instagram.com/bellamoda",
     tiktok: "https://tiktok.com/@bellamoda"
-  });
+  }));
   
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -31,34 +42,45 @@ export default function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [backendOffline, setBackendOffline] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    // Only show full blocking loader if we have zero products in memory and cache
+    const initialCached = getInitialCache('velor_cached_products', []);
+    return initialCached.length === 0;
+  });
 
-  // Load Initial Data
+  // Fast Parallel Initial Data Fetch
   const fetchData = async () => {
-    setLoading(true);
     try {
-      // Try to fetch settings
-      const settingsRes = await fetch(`${API_BASE}/settings`);
-      if (settingsRes.ok) {
+      const [settingsRes, productsRes, videosRes] = await Promise.all([
+        fetch(`${API_BASE}/settings`).catch(() => null),
+        fetch(`${API_BASE}/products`).catch(() => null),
+        fetch(`${API_BASE}/videos`).catch(() => null)
+      ]);
+
+      if (settingsRes && settingsRes.ok) {
         const settingsData = await settingsRes.json();
         setSettings(settingsData);
+        localStorage.setItem('velor_cached_settings', JSON.stringify(settingsData));
       }
 
-      // Fetch products
-      const productsRes = await fetch(`${API_BASE}/products`);
-      if (productsRes.ok) {
+      if (productsRes && productsRes.ok) {
         const productsData = await productsRes.json();
         setProducts(productsData);
+        localStorage.setItem('velor_cached_products', JSON.stringify(productsData));
       }
 
-      // Fetch videos
-      const videosRes = await fetch(`${API_BASE}/videos`);
-      if (videosRes.ok) {
+      if (videosRes && videosRes.ok) {
         const videosData = await videosRes.json();
         setVideos(videosData);
+        localStorage.setItem('velor_cached_videos', JSON.stringify(videosData));
       }
 
-      setBackendOffline(false);
+      if (productsRes?.ok || settingsRes?.ok) {
+        setBackendOffline(false);
+        setLoading(false);
+      } else {
+        throw new Error('Backend failed to respond');
+      }
     } catch (error) {
       console.warn("Backend offline. Running in Demo Mode with local fallback database.");
       setBackendOffline(true);
